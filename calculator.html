@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uganda Mobile Money Fee Calculator | MTN & Airtel Tariffs</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        display: ['"Space Grotesk"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Smooth transitions on interactive controls */
+        button, input {
+            transition: all 0.2s ease-in-out;
+        }
+        /* Custom scrollbar for lookups checklist list */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen py-8 px-4 flex flex-col items-center justify-between">
+
+    <!-- Active provider border indicator top -->
+    <div id="top-indicator" class="fixed top-0 inset-x-0 h-1.5 bg-amber-400 transition-all duration-300 z-50"></div>
+
+    <!-- Main Wrapper App -->
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden mt-4 mb-8">
+        
+        <!-- Brand Header Hero Section -->
+        <div class="bg-slate-900 text-white px-6 py-8 text-center relative overflow-hidden">
+            <div id="ambient-overlay" class="absolute -top-10 -right-10 w-32 h-32 bg-yellow-400 rounded-full blur-3xl opacity-20 transition-all duration-500"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-red-600 rounded-full blur-3xl opacity-10"></div>
+            
+            <div class="inline-flex items-center justify-center p-3 bg-white/10 rounded-2xl mb-3.5 border border-white/15">
+                <!-- SVG Calculator Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400" id="calc-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <rect x="4" y="4" width="16" height="16" rx="2" />
+                    <line x1="9" y1="9" x2="15" y2="9" />
+                    <line x1="9" y1="13" x2="15" y2="13" />
+                </svg>
+            </div>
+            <h1 class="text-2xl font-black font-display tracking-tight text-white mb-2">Uganda Mobile Money</h1>
+            <p id="brand-tagline" class="text-yellow-400 font-extrabold tracking-widest text-xs uppercase mb-1">MTN & Airtel Calculator</p>
+            <p class="text-slate-400 text-xs">Know your transaction charges before you send or cash out</p>
+        </div>
+
+        <!-- In-App navigation tabs (Calculator vs Tariff Guide sheets) -->
+        <div class="grid grid-cols-2 p-1.5 bg-slate-100/80 border-b border-slate-100 font-bold">
+            <button id="tab-calculator-link" onclick="toggleViewMode('CALCULATOR')" class="py-2.5 px-3 rounded-xl text-xs uppercase tracking-wider text-center bg-white text-slate-800 shadow-sm">
+                Calculator
+            </button>
+            <button id="tab-guide-link" onclick="toggleViewMode('GUIDE')" class="py-2.5 px-3 rounded-xl text-xs uppercase tracking-wider text-center text-slate-500 hover:text-slate-800">
+                Tariff Sheets
+            </button>
+        </div>
+
+        <!-- Section 1: Active Interactive Calculator Form -->
+        <div id="view-calculator" class="p-6 space-y-6">
+            
+            <!-- step 1: provider pick -->
+            <div>
+                <label class="block text-[10px] font-extrabold uppercase text-slate-400 tracking-wider mb-2.5">1. Select Mobile Operator</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" id="btn-mtn" onclick="selectNetwork('MTN')" class="flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl font-extrabold text-sm border-2 border-amber-400 bg-amber-50 text-amber-950 transition cursor-pointer">
+                        <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 border border-yellow-700"></span>
+                        MTN MoMo
+                    </button>
+                    <button type="button" id="btn-airtel" onclick="selectNetwork('AIRTEL')" class="flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl font-bold text-sm border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition cursor-pointer">
+                        <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+                        Airtel Money
+                    </button>
+                </div>
+            </div>
+
+            <!-- step 2: transaction type -->
+            <div>
+                <label class="block text-[10px] font-extrabold uppercase text-slate-400 tracking-wider mb-2.5">2. Select Transaction Method</label>
+                <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
+                    <button type="button" id="btn-tx-send" onclick="selectTxType('SEND')" class="py-2.5 px-3 rounded-lg font-extrabold text-xs tracking-wider uppercase text-center bg-white text-slate-800 shadow-sm transition cursor-pointer">
+                        Send Money (P2P)
+                    </button>
+                    <button type="button" id="btn-tx-withdraw" onclick="selectTxType('WITHDRAW')" class="py-2.5 px-3 rounded-lg font-bold text-xs tracking-wider uppercase text-center text-slate-500 hover:text-slate-800 transition cursor-pointer font-sans">
+                        Withdraw Cash
+                    </button>
+                </div>
+            </div>
+
+            <!-- step 3: amount selector input -->
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label for="amount-field" class="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">3. Enter Amount (UGX)</label>
+                    <span class="text-[10px] text-slate-450 font-bold bg-slate-100 py-0.5 px-1.5 rounded">500 – 10M</span>
+                </div>
+                
+                <div class="relative bg-slate-50 border-2 border-slate-100 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-amber-400 focus-within:bg-white focus-within:border-transparent transition-all">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <span class="text-slate-400 font-extrabold text-xs font-mono">UGX</span>
+                    </div>
+                    <input type="text" id="amount-field" placeholder="Enter amount..." oninput="onAmountChanged(this)" class="w-full pl-14 pr-4 py-4 text-xl font-bold font-mono tracking-wide text-slate-850 focus:outline-none bg-transparent">
+                </div>
+
+                <!-- Instant structured comma representation under typing -->
+                <div id="ugx-formatted-label" class="hidden mt-2.5 pl-1 text-[11px] text-slate-400 font-semibold font-mono flex items-center gap-1.5">
+                    🪙 Equivalent: <span id="ugx-formatted-val" class="font-extrabold text-slate-700">0 UGX</span>
+                </div>
+
+                <!-- validation warning block -->
+                <div id="error-alert" class="hidden mt-3 bg-red-50 border border-red-100 p-3.5 rounded-xl text-xs text-red-700 font-medium flex items-center gap-2">
+                    <span class="shrink-0 text-base">⚠️</span>
+                    <span id="error-alert-txt"></span>
+                </div>
+            </div>
+
+            <!-- preset tags -->
+            <div>
+                <span class="block text-[10px] font-extrabold uppercase text-slate-400 tracking-wider mb-2">Quick Standard Amounts</span>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" onclick="setQuickAmount(5000)" class="text-xs bg-slate-50 text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-slate-100 py-2 px-3 rounded-xl font-mono font-bold">5k</button>
+                    <button type="button" onclick="setQuickAmount(10000)" class="text-xs bg-slate-50 text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-slate-100 py-2 px-3 rounded-xl font-mono font-bold">10k</button>
+                    <button type="button" onclick="setQuickAmount(20000)" class="text-xs bg-slate-50 text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-slate-100 py-2 px-3 rounded-xl font-mono font-bold">20k</button>
+                    <button type="button" onclick="setQuickAmount(50000)" class="text-xs bg-slate-50 text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-slate-100 py-2 px-3 rounded-xl font-mono font-bold">50k</button>
+                    <button type="button" onclick="setQuickAmount(100000)" class="text-xs bg-slate-50 text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-slate-100 py-2 px-3 rounded-xl font-mono font-bold">100k</button>
+                    <button type="button" onclick="setQuickAmount(500000)" class="text-xs bg-slate-50 text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-slate-100 py-2 px-3 rounded-xl font-mono font-bold">500k</button>
+                    <button type="button" onclick="setQuickAmount(1000000)" class="text-xs bg-slate-50 text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-slate-100 py-2 px-3 rounded-xl font-mono font-bold">1.0M</button>
+                </div>
+            </div>
+
+            <!-- buttons actions -->
+            <div class="grid grid-cols-3 gap-3 pt-2">
+                <button type="button" onclick="handleClear()" class="col-span-1 border border-slate-200 hover:bg-slate-50 text-slate-500 py-4 rounded-2xl font-bold uppercase text-[11px] tracking-widest cursor-pointer">
+                    Clear
+                </button>
+                <button type="button" id="btn-submit" onclick="computeActionFee()" class="col-span-2 bg-yellow-400 text-yellow-950 hover:bg-yellow-500 font-extrabold text-xs tracking-widest uppercase py-4 rounded-2xl shadow-lg shadow-yellow-400/10 cursor-pointer">
+                    Calculate Fees
+                </button>
+            </div>
+
+            <!-- Interactive Results Panel -->
+            <div id="results-panel" class="hidden bg-slate-900 text-white rounded-2xl p-5 border border-slate-800 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <p class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+                        <span id="results-dot" class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+                        <span id="results-operator-lbl">MTN MoMo</span>
+                    </p>
+                    <span id="results-method-badge" class="text-[9px] font-extrabold uppercase tracking-wider bg-yellow-450/10 text-yellow-400 px-2.5 py-0.5 rounded-full border border-yellow-400/20">SEND P2P</span>
+                </div>
+
+                <div class="space-y-3.5">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-400 font-medium">Entered Amount:</span>
+                        <span id="out-amount" class="font-extrabold font-mono text-base text-white">0 UGX</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-400 font-medium">Transfer Fee Charged:</span>
+                        <span id="out-fee" class="font-extrabold font-mono text-base text-red-400">0 UGX</span>
+                    </div>
+
+                    <div class="border-t border-dashed border-slate-800 pt-4 flex justify-between items-center">
+                        <div class="flex flex-col">
+                            <span id="out-final-title" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Total Deducted</span>
+                            <span id="out-final-subtitle" class="text-[10px] text-slate-500 mt-0.5 leading-none">Sent amount + transaction fees</span>
+                        </div>
+                        <span id="out-final-value" class="text-xl font-black font-mono tracking-tight text-emerald-400">0 UGX</span>
+                    </div>
+
+                    <!-- Custom readable scenario details -->
+                    <div id="out-scenario-card" class="bg-slate-850 p-4 rounded-xl border border-slate-800 text-[11.5px] leading-relaxed text-slate-300">
+                        <!-- Filled by JS -->
+                    </div>
+
+                    <!-- Realtime Provider Savings Comparison -->
+                    <div class="border-t border-slate-800 pt-3.5 mt-2">
+                        <p class="text-[9px] uppercase font-bold tracking-widest text-slate-400 mb-2">Dual Operator Comparison</p>
+                        <div class="grid grid-cols-2 gap-2 text-center text-[11px]">
+                            <div class="bg-slate-800/40 p-2.5 rounded-xl border border-slate-800">
+                                <span class="text-slate-400 uppercase font-medium">MTN MoMo</span>
+                                <span id="comp-val-mtn" class="block font-bold text-white font-mono mt-0.5">0 UGX</span>
+                            </div>
+                            <div class="bg-slate-800/40 p-2.5 rounded-xl border border-slate-800">
+                                <span class="text-slate-400 uppercase font-medium font-sans">Airtel Money</span>
+                                <span id="comp-val-airtel" class="block font-bold text-white font-mono mt-0.5">0 UGX</span>
+                            </div>
+                        </div>
+                        <p id="comp-verdict" class="text-[10px] text-center font-bold text-emerald-400 mt-3.5 uppercase tracking-wide"></p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Section 2: Complete Static Rates Sheet Guide (Hidden by default) -->
+        <div id="view-sheets" class="hidden p-6 space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
+                <h3 class="text-base font-bold font-display text-slate-900">Standard Tariff Rates</h3>
+                <span class="text-[9px] uppercase tracking-wider bg-slate-150 py-0.5 px-2 rounded-md font-mono text-slate-500">Tariff Book</span>
+            </div>
+
+            <!-- Provider filter -->
+            <div class="grid grid-cols-2 p-1 bg-slate-100 rounded-xl">
+                <button type="button" id="btn-guide-mtn" onclick="selectGuideFilter('MTN')" class="py-2 rounded-lg font-bold text-xs uppercase bg-amber-400 text-amber-950 shadow-sm">
+                    MTN Tiers
+                </button>
+                <button type="button" id="btn-guide-airtel" onclick="selectGuideFilter('AIRTEL')" class="py-2 rounded-lg font-bold text-xs text-slate-500 uppercase">
+                    Airtel Tiers
+                </button>
+            </div>
+
+            <!-- type filter -->
+            <div class="flex gap-4 border-b border-slate-100">
+                <button type="button" id="btn-guide-send" onclick="selectGuideType('SEND')" class="pb-2 font-bold text-xs uppercase border-b-2 border-slate-800 text-slate-850">
+                    Send P2P (Standard)
+                </button>
+                <button type="button" id="btn-guide-withdraw" onclick="selectGuideType('WITHDRAW')" class="pb-2 font-bold text-xs uppercase border-b-2 border-transparent text-slate-400 hover:text-slate-600">
+                    Withdraw Cash
+                </button>
+            </div>
+
+            <!-- lookup list -->
+            <div class="overflow-x-auto border border-slate-100 rounded-xl max-h-[300px] overflow-y-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-slate-50 text-[9px] font-extrabold uppercase text-slate-400 tracking-wider">
+                            <th class="py-3 px-4">Amount range (UGX)</th>
+                            <th class="py-3 px-4 text-right">Fee Charge (UGX)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tariff-table-rows" class="text-xs text-slate-700 font-mono">
+                        <!-- Filled dynamically by JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- helper -->
+            <p class="text-[11px] text-slate-400 text-center leading-relaxed">
+                Highlighting auto-syncs with whichever amount is currently written in the Calculator screen.
+            </p>
+        </div>
+
+    </div>
+
+    <!-- Static Footer Brand Description -->
+    <div class="w-full max-w-sm text-center space-y-4 px-2">
+        <p class="text-slate-400 text-[9px] uppercase tracking-widest font-extrabold">Indicative Notice</p>
+        <p class="text-slate-500 text-[11.5px] leading-relaxed">
+            Fees are indicative estimates based on standard published tariffs and may vary. Always confirm with your provider's official rates.
+        </p>
+        <div class="h-px bg-slate-200 w-20 mx-auto"></div>
+        <div class="text-xs text-slate-500">
+            <p class="font-extrabold text-slate-700">Built by Ali Nabende</p>
+            <p class="text-[11px] text-slate-500 font-medium">ICT Professional & Web Developer • Kampala, Uganda</p>
+        </div>
+        <p class="text-[9px] text-slate-400 font-mono text-center">
+            © 2026 Uganda Mobile Money Fee Calculator • Version 2.0 (Offline-Ready)
+        </p>
+    </div>
+
+    <script>
+        // Data sets
+        const mtnSendList = [
+            { min: 500, max: 2500, fee: 100 },
+            { min: 2501, max: 5000, fee: 167 },
+            { min: 5001, max: 15000, fee: 440 },
+            { min: 15001, max: 30005, fee: 935 }, // aligned to close boundaries
+            { min: 30006, max: 45000, fee: 1496 },
+            { min: 45001, max: 60000, fee: 1980 },
+            { min: 60001, max: 125000, fee: 2750 },
+            { min: 125001, max: 250000, fee: 3520 },
+            { min: 250001, max: 500000, fee: 7150 },
+            { min: 500001, max: 1000000, fee: 8800 },
+            { min: 1000001, max: 2000000, fee: 11000 },
+            { min: 2000001, max: 3000000, fee: 13200 },
+            { min: 3000011, max: 5000000, fee: 15400 },
+            { min: 5000001, max: 10000000, fee: 17600 }
+        ];
+
+        const mtnWithdrawList = [
+            { min: 500, max: 2500, fee: 184 },
+            { min: 2501, max: 5000, fee: 220 },
+            { min: 5001, max: 15000, fee: 451 },
+            { min: 15001, max: 20000, fee: 530 },
+            { min: 20001, max: 35000, fee: 880 },
+            { min: 35001, max: 50000, fee: 1300 },
+            { min: 50001, max: 60000, fee: 1500 },
+            { min: 60001, max: 125000, fee: 2350 },
+            { min: 125001, max: 250000, fee: 3450 },
+            { min: 250001, max: 500000, fee: 6600 },
+            { min: 500001, max: 1000000, fee: 8400 },
+            { min: 1000001, max: 2000000, fee: 10500 },
+            { min: 2000001, max: 3000000, fee: 12000 },
+            { min: 3000011, max: 5000000, fee: 14000 },
+            { min: 5000001, max: 10000000, fee: 16500 }
+        ];
+
+        const airtelSendList = [
+            { min: 500, max: 2500, fee: 100 },
+            { min: 2501, max: 5000, fee: 165 },
+            { min: 5001, max: 15000, fee: 440 },
+            { min: 15001, max: 30000, fee: 900 },
+            { min: 30001, max: 45000, fee: 1450 },
+            { min: 45001, max: 60000, fee: 1900 },
+            { min: 60001, max: 125000, fee: 2700 },
+            { min: 125001, max: 250000, fee: 3450 },
+            { min: 250001, max: 500000, fee: 7000 },
+            { min: 500001, max: 1000000, fee: 8600 },
+            { min: 1000001, max: 2000000, fee: 10800 },
+            { min: 2000001, max: 3000000, fee: 13000 },
+            { min: 3000011, max: 5000000, fee: 15000 },
+            { min: 5000001, max: 10000000, fee: 17200 }
+        ];
+
+        const airtelWithdrawList = [
+            { min: 500, max: 2500, fee: 180 },
+            { min: 2501, max: 5000, fee: 215 },
+            { min: 5001, max: 15000, fee: 440 },
+            { min: 15001, max: 20000, fee: 520 },
+            { min: 20001, max: 35000, fee: 850 },
+            { min: 35001, max: 50000, fee: 1250 },
+            { min: 50001, max: 60000, fee: 1450 },
+            { min: 60001, max: 125000, fee: 2300 },
+            { min: 125001, max: 250000, fee: 3400 },
+            { min: 250001, max: 500000, fee: 6500 },
+            { min: 500001, max: 1000000, fee: 8200 },
+            { min: 1000001, max: 2000000, fee: 10200 },
+            { min: 2000001, max: 3000000, fee: 11800 },
+            { min: 3000011, max: 5000000, fee: 13800 },
+            { min: 5000001, max: 10000000, fee: 16000 }
+        ];
+
+        // Active Application states
+        let selectedNetwork = 'MTN';
+        let selectedTxType = 'SEND';
+        let viewMode = 'CALCULATOR';
+
+        // Rate sheet filter states
+        let filterNetwork = 'MTN';
+        let filterType = 'SEND';
+
+        function commas(num) {
+            return new Intl.NumberFormat('en-UG').format(num);
+        }
+
+        function onAmountChanged(inputEle) {
+            let val = inputEle.value.replace(/[^0-9]/g, '');
+            inputEle.value = val;
+
+            const formatLabel = document.getElementById('ugx-formatted-label');
+            const formatValue = document.getElementById('ugx-formatted-val');
+
+            if (val) {
+                const numeric = parseInt(val, 10);
+                formatValue.innerText = commas(numeric) + " UGX";
+                formatLabel.classList.remove('hidden');
+            } else {
+                formatLabel.classList.add('hidden');
+            }
+
+            hideErrorAlert();
+            hideResultsPanel();
+        }
+
+        function setQuickAmount(val) {
+            const inputField = document.getElementById('amount-field');
+            inputField.value = val;
+            
+            const formatLabel = document.getElementById('ugx-formatted-label');
+            const formatValue = document.getElementById('ugx-formatted-val');
+            formatValue.innerText = commas(val) + " UGX";
+            formatLabel.classList.remove('hidden');
+
+            hideErrorAlert();
+            hideResultsPanel();
+        }
+
+        function toggleViewMode(mode) {
+            viewMode = mode;
+            const viewCalc = document.getElementById('view-calculator');
+            const viewSheets = document.getElementById('view-sheets');
+            const tabCalcLink = document.getElementById('tab-calculator-link');
+            const tabGuideLink = document.getElementById('tab-guide-link');
+
+            if (mode === 'CALCULATOR') {
+                viewCalc.classList.remove('hidden');
+                viewSheets.classList.add('hidden');
+                tabCalcLink.className = "py-2.5 px-3 rounded-xl text-xs uppercase tracking-wider text-center bg-white text-slate-800 shadow-sm";
+                tabGuideLink.className = "py-2.5 px-3 rounded-xl text-xs uppercase tracking-wider text-center text-slate-500 hover:text-slate-800";
+            } else {
+                viewCalc.classList.add('hidden');
+                viewSheets.classList.remove('hidden');
+                tabGuideLink.className = "py-2.5 px-3 rounded-xl text-xs uppercase tracking-wider text-center bg-white text-slate-800 shadow-sm";
+                tabCalcLink.className = "py-2.5 px-3 rounded-xl text-xs uppercase tracking-wider text-center text-slate-500 hover:text-slate-800";
+                renderTariffSheets();
+            }
+        }
+
+        function selectNetwork(operator) {
+            selectedNetwork = operator;
+            const btnMTN = document.getElementById('btn-mtn');
+            const btnAirtel = document.getElementById('btn-airtel');
+            const topInd = document.getElementById('top-indicator');
+            const submitBtn = document.getElementById('btn-submit');
+            const calcIcon = document.getElementById('calc-svg');
+            const overlay = document.getElementById('ambient-overlay');
+            const tagLine = document.getElementById('brand-tagline');
+
+            if (operator === 'MTN') {
+                btnMTN.className = "flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl font-extrabold text-sm border-2 border-amber-400 bg-amber-50 text-amber-950 transition cursor-pointer";
+                btnAirtel.className = "flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl font-bold text-sm border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition cursor-pointer";
+                btnMTN.children[0].className = "w-2.5 h-2.5 rounded-full bg-yellow-500 border border-yellow-700";
+                btnAirtel.children[0].className = "w-2.5 h-2.5 rounded-full bg-slate-300";
+                
+                topInd.className = "fixed top-0 inset-x-0 h-1.5 bg-amber-400 transition-all duration-300 z-50";
+                submitBtn.className = "col-span-2 bg-yellow-400 text-yellow-950 hover:bg-yellow-500 font-extrabold text-xs tracking-widest uppercase py-4 rounded-2xl shadow-lg shadow-yellow-400/10 cursor-pointer";
+                calcIcon.className = "h-6 w-6 text-yellow-400";
+                overlay.className = "absolute -top-10 -right-10 w-32 h-32 bg-yellow-400 rounded-full blur-3xl opacity-20 transition-all duration-500";
+                tagLine.className = "text-yellow-400 font-extrabold tracking-widest text-xs uppercase mb-1";
+            } else {
+                btnAirtel.className = "flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl font-extrabold text-sm border-2 border-red-500 bg-red-50 text-red-950 transition cursor-pointer";
+                btnMTN.className = "flex items-center justify-center gap-2.5 py-3.5 px-4 rounded-2xl font-bold text-sm border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 transition cursor-pointer";
+                btnAirtel.children[0].className = "w-2.5 h-2.5 rounded-full bg-red-600 border border-red-800 animate-pulse";
+                btnMTN.children[0].className = "w-2.5 h-2.5 rounded-full bg-slate-300";
+                
+                topInd.className = "fixed top-0 inset-x-0 h-1.5 bg-red-600 transition-all duration-300 z-50";
+                submitBtn.className = "col-span-2 bg-red-600 text-white hover:bg-red-700 font-extrabold text-xs tracking-widest uppercase py-4 rounded-2xl shadow-lg shadow-red-600/10 cursor-pointer";
+                calcIcon.className = "h-6 w-6 text-red-500";
+                overlay.className = "absolute -top-10 -right-10 w-32 h-32 bg-red-600 rounded-full blur-3xl opacity-20 transition-all duration-500";
+                tagLine.className = "text-red-500 font-extrabold tracking-widest text-xs uppercase mb-1";
+            }
+            hideResultsPanel();
+        }
+
+        function selectTxType(type) {
+            selectedTxType = type;
+            const btnSend = document.getElementById('btn-tx-send');
+            const btnWithdraw = document.getElementById('btn-tx-withdraw');
+
+            if (type === 'SEND') {
+                btnSend.className = "py-2.5 px-3 rounded-lg font-extrabold text-xs tracking-wider uppercase text-center bg-white text-slate-800 shadow-sm transition cursor-pointer";
+                btnWithdraw.className = "py-2.5 px-3 rounded-lg font-bold text-xs tracking-wider uppercase text-center text-slate-500 hover:text-slate-800 transition cursor-pointer";
+            } else {
+                btnWithdraw.className = "py-2.5 px-3 rounded-lg font-extrabold text-xs tracking-wider uppercase text-center bg-white text-slate-800 shadow-sm transition cursor-pointer";
+                btnSend.className = "py-2.5 px-3 rounded-lg font-bold text-xs tracking-wider uppercase text-center text-slate-500 hover:text-slate-800 transition cursor-pointer";
+            }
+            hideResultsPanel();
+        }
+
+        function showErrorAlert(msg) {
+            const block = document.getElementById('error-alert');
+            const txt = document.getElementById('error-alert-txt');
+            txt.innerText = msg;
+            block.classList.remove('hidden');
+        }
+
+        function hideErrorAlert() {
+            document.getElementById('error-alert').classList.add('hidden');
+        }
+
+        function hideResultsPanel() {
+            document.getElementById('results-panel').classList.add('hidden');
+        }
+
+        function handleClear() {
+            document.getElementById('amount-field').value = '';
+            document.getElementById('ugx-formatted-label').classList.add('hidden');
+            hideErrorAlert();
+            hideResultsPanel();
+        }
+
+        function lookupSingleFee(net, type, sum) {
+            if (sum < 500 || sum > 10000000) return null;
+            let targetList = [];
+            if (net === 'MTN') {
+                targetList = (type === 'SEND') ? mtnSendList : mtnWithdrawList;
+            } else {
+                targetList = (type === 'SEND') ? airtelSendList : airtelWithdrawList;
+            }
+            const foundRow = targetList.find(r => sum >= r.min && sum <= r.max);
+            return foundRow ? foundRow.fee : null;
+        }
+
+        function computeActionFee() {
+            const raw = document.getElementById('amount-field').value;
+            const parsedSum = parseInt(raw, 10);
+
+            if (isNaN(parsedSum)) {
+                showErrorAlert('Please enter a valid transaction amount.');
+                return;
+            }
+
+            if (parsedSum < 500 || parsedSum > 10000000) {
+                showErrorAlert('Please enter an amount between UGX 500 and UGX 10,000,000.');
+                return;
+            }
+
+            hideErrorAlert();
+
+            const targetFee = lookupSingleFee(selectedNetwork, selectedTxType, parsedSum);
+            if (targetFee === null) {
+                showErrorAlert('Unable to find tariff. Please confirm values.');
+                return;
+            }
+
+            // Draw results
+            document.getElementById('out-amount').innerText = commas(parsedSum) + " UGX";
+            document.getElementById('out-fee').innerText = "+" + commas(targetFee) + " UGX";
+
+            // network brand indicator labels
+            const dot = document.getElementById('results-dot');
+            const labelOp = document.getElementById('results-operator-lbl');
+            const badgeMeth = document.getElementById('results-method-badge');
+
+            if (selectedNetwork === 'MTN') {
+                dot.className = "w-2.5 h-2.5 rounded-full bg-yellow-400";
+                labelOp.innerText = "MTN Mobile Money";
+                badgeMeth.className = "text-[9px] font-extrabold uppercase tracking-wider bg-yellow-400/10 text-yellow-400 px-2.5 py-0.5 rounded-full border border-yellow-400/20";
+            } else {
+                dot.className = "w-2.5 h-2.5 rounded-full bg-red-600 animate-pulse";
+                labelOp.innerText = "Airtel Money";
+                badgeMeth.className = "text-[9px] font-extrabold uppercase tracking-wider bg-red-600/10 text-red-500 px-2.5 py-0.5 rounded-full border border-red-500/20";
+            }
+
+            // transaction details toggling layout
+            const outTitle = document.getElementById('out-final-title');
+            const outSubtitle = document.getElementById('out-final-subtitle');
+            const outFinalVal = document.getElementById('out-final-value');
+            const scenarioCard = document.getElementById('out-scenario-card');
+
+            const totalDebitedSum = parsedSum + targetFee;
+
+            if (selectedTxType === 'SEND') {
+                badgeMeth.innerText = "SEND P2P";
+                outTitle.innerText = "Sender Total Account Cost";
+                outSubtitle.innerText = "Direct P2P sent amount + transfer fees";
+                outFinalVal.innerText = commas(totalDebitedSum) + " UGX";
+                outFinalVal.className = "text-xl font-black font-mono tracking-tight text-emerald-400";
+
+                scenarioCard.innerHTML = `
+                    <div class="flex items-start gap-2">
+                        <span class="text-emerald-400 font-extrabold">✓</span>
+                        <p>To transfer exactly <span class="font-bold text-white font-mono">${commas(parsedSum)} UGX</span>, your mobile money wallet requires a minimum balance of <span class="font-bold text-emerald-300 font-mono">${commas(totalDebitedSum)} UGX</span> before tapping transfer.</p>
+                    </div>
+                `;
+            } else {
+                badgeMeth.innerText = "WITHDRAW CASH";
+                outTitle.innerText = "Withdrawal Fee (Cash-Out)";
+                outSubtitle.innerText = "Charges deducted from phone for hand cash";
+                outFinalVal.innerText = commas(targetFee) + " UGX";
+                outFinalVal.className = "text-xl font-black font-mono tracking-tight text-red-400";
+
+                scenarioCard.innerHTML = `
+                    <div class="flex flex-col gap-1.5 text-slate-300">
+                        <p class="flex items-start gap-2">
+                            <span class="text-amber-400 font-bold">•</span>
+                            <span>The telecom agent will hand you exactly <span class="text-white font-bold font-mono">${commas(parsedSum)} UGX</span> cash in hand.</span>
+                        </p>
+                        <p class="flex items-start gap-2">
+                            <span class="text-amber-400 font-bold">•</span>
+                            <span>Your phone balance is debited <span class="text-slate-200 font-bold font-mono">${commas(totalDebitedSum)} UGX</span> total.</span>
+                        </p>
+                        <p class="flex items-start gap-2 text-slate-400 text-[10px] pl-3.5 border-l border-slate-700">
+                            <span>If you withdraw from an exact balance of ${commas(parsedSum)} UGX, you can carry home <b>${commas(parsedSum - targetFee)} UGX</b> cash.</span>
+                        </p>
+                    </div>
+                `;
+            }
+
+            // Realtime compare lists
+            const feeMTN = lookupSingleFee('MTN', selectedTxType, parsedSum);
+            const feeAirtel = lookupSingleFee('AIRTEL', selectedTxType, parsedSum);
+
+            document.getElementById('comp-val-mtn').innerText = feeMTN ? commas(feeMTN) + " UGX" : "N/A";
+            document.getElementById('comp-val-airtel').innerText = feeAirtel ? commas(feeAirtel) + " UGX" : "N/A";
+
+            const compResultLabel = document.getElementById('comp-verdict');
+            if (feeMTN !== null && feeAirtel !== null) {
+                if (feeMTN < feeAirtel) {
+                    const saved = feeAirtel - feeMTN;
+                    compResultLabel.innerText = "🎉 MTN MoMo is UGX " + commas(saved) + " cheaper for this amount!";
+                    compResultLabel.className = "text-[10px] text-center font-bold text-amber-400 mt-3.5 uppercase tracking-wide";
+                } else if (feeAirtel < feeMTN) {
+                    const saved = feeMTN - feeAirtel;
+                    compResultLabel.innerText = "🎉 Airtel Money is UGX " + commas(saved) + " cheaper for this amount!";
+                    compResultLabel.className = "text-[10px] text-center font-bold text-red-500 mt-3.5 uppercase tracking-wide";
+                } else {
+                    compResultLabel.innerText = "⚖️ Charges are equal on both networks!";
+                    compResultLabel.className = "text-[10px] text-center font-bold text-slate-400 mt-3.5 uppercase tracking-wide";
+                }
+            } else {
+                compResultLabel.innerText = "";
+            }
+
+            document.getElementById('results-panel').classList.remove('hidden');
+        }
+
+        // Guide sheet triggers
+        function selectGuideFilter(net) {
+            filterNetwork = net;
+            const btnMTN = document.getElementById('btn-guide-mtn');
+            const btnAirtel = document.getElementById('btn-guide-airtel');
+
+            if (net === 'MTN') {
+                btnMTN.className = "py-2 rounded-lg font-bold text-xs uppercase bg-amber-400 text-amber-950 shadow-sm cursor-pointer";
+                btnAirtel.className = "py-2 rounded-lg font-bold text-xs text-slate-500 uppercase cursor-pointer";
+            } else {
+                btnAirtel.className = "py-2 rounded-lg font-bold text-xs uppercase bg-red-600 text-white shadow-sm cursor-pointer";
+                btnMTN.className = "py-2 rounded-lg font-bold text-xs text-slate-500 uppercase cursor-pointer";
+            }
+            renderTariffSheets();
+        }
+
+        function selectGuideType(type) {
+            filterType = type;
+            const btnSend = document.getElementById('btn-guide-send');
+            const btnWithdraw = document.getElementById('btn-guide-withdraw');
+
+            if (type === 'SEND') {
+                btnSend.className = "pb-2 font-bold text-xs uppercase border-b-2 border-slate-800 text-slate-850 cursor-pointer";
+                btnWithdraw.className = "pb-2 font-bold text-xs uppercase border-b-2 border-transparent text-slate-400 hover:text-slate-600 cursor-pointer";
+            } else {
+                btnWithdraw.className = "pb-2 font-bold text-xs uppercase border-b-2 border-slate-800 text-slate-850 cursor-pointer";
+                btnSend.className = "pb-2 font-bold text-xs uppercase border-b-2 border-transparent text-slate-400 hover:text-slate-600 cursor-pointer";
+            }
+            renderTariffSheets();
+        }
+
+        function renderTariffSheets() {
+            let selectedList = [];
+            if (filterNetwork === 'MTN') {
+                selectedList = (filterType === 'SEND') ? mtnSendList : mtnWithdrawList;
+            } else {
+                selectedList = (filterType === 'SEND') ? airtelSendList : airtelWithdrawList;
+            }
+
+            const inputSumRaw = document.getElementById('amount-field').value;
+            const typedVal = parseInt(inputSumRaw, 10) || 0;
+
+            const tableBody = document.getElementById('tariff-table-rows');
+            let tableHTML = '';
+
+            selectedList.forEach(obj => {
+                const isActiveRange = typedVal >= obj.min && typedVal <= obj.max;
+                const activeClass = isActiveRange 
+                    ? 'bg-yellow-50 font-bold text-yellow-900 border-l-4 border-amber-400' 
+                    : 'hover:bg-slate-50 border-b border-slate-100';
+
+                tableHTML += `
+                    <tr class="${activeClass}">
+                        <td class="py-3 px-4 font-sans font-medium">${commas(obj.min)} – ${commas(obj.max)}</td>
+                        <td class="py-3 px-4 text-right font-extrabold text-slate-900">${commas(obj.fee)}</td>
+                    </tr>
+                `;
+            });
+
+            tableBody.innerHTML = tableHTML;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "Uganda Mobile Money Fee Calculator",
+  "description": "Calculate transaction fees and cash withdrawal charges for MTN Mobile Money and Airtel Money in Uganda accurately with tiered lookup tables.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
